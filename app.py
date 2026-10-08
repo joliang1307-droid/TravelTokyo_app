@@ -52,6 +52,14 @@ DAY_COLORS = ["#6E8C46", "#C1663A", "#3B7D93", "#8B5FBF", "#B08900", "#4E86E1"]
 # 還沒選天數/心願單時的瀏覽地圖：全部景點用同一種中性色，跟規劃模式的分天配色區分開
 BROWSE_COLOR = "#5C6B73"
 
+# 地圖底圖：原本用 CartoDB positron，後來 CARTO 改成需要 API 金鑰，底圖只剩
+# 「API KEY REQUIRED」浮水印，改用 Esri 淺灰底圖（免金鑰，外觀跟原本的淺灰底接近）
+BASEMAP_TILES = (
+    "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/"
+    "World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+)
+BASEMAP_ATTR = "Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ"
+
 # 瀏覽模式地圖圖示：依景點類型顯示不同 emoji＋底色圓圈（提案項目7）。用 emoji 而不是
 # Font Awesome 圖示字型，是因為瀏覽模式地圖是另外快取渲染的靜態 HTML，沒有掛
 # Leaflet.awesome-markers 的圖示字型資源，emoji 靠瀏覽器原生字型顯示，不用額外載入
@@ -762,7 +770,7 @@ def build_browse_map(records):
     b_lons = [r["longitude"] for r in records]
     b_center = [sum(b_lats) / len(b_lats), sum(b_lons) / len(b_lons)]
 
-    bm = folium.Map(location=b_center, tiles="CartoDB positron")
+    bm = folium.Map(location=b_center, tiles=BASEMAP_TILES, attr=BASEMAP_ATTR)
     bm.fit_bounds([[min(b_lats), min(b_lons)], [max(b_lats), max(b_lons)]])
     cluster_layer = MarkerCluster().add_to(bm)
     for rec in records:
@@ -1246,7 +1254,7 @@ else:
     all_lons = [s["longitude"] for group in days.values() for s in group]
     center = [sum(all_lats) / len(all_lats), sum(all_lons) / len(all_lons)]
 
-    m = folium.Map(location=center, tiles="CartoDB positron")
+    m = folium.Map(location=center, tiles=BASEMAP_TILES, attr=BASEMAP_ATTR)
     m.fit_bounds([[min(all_lats), min(all_lons)], [max(all_lats), max(all_lons)]])
     for day, group in days.items():
         color = DAY_COLORS[(day - 1) % len(DAY_COLORS)]
