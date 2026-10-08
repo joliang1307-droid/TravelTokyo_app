@@ -808,7 +808,7 @@ def build_browse_map(records):
 
 
 @st.cache_data(show_spinner="正在建立地圖…")
-def build_browse_map_html(neighborhoods_key, spot_types_key, themes_key, wishlist_key=None):
+def build_browse_map_html(neighborhoods_key, spot_types_key, themes_key, wishlist_key=None, basemap_key=None):
     """瀏覽模式地圖（866 個景點）最花時間的不是建 folium 物件（約 0.2 秒），而是
     把它 render 成 HTML（約 5 秒、1.3MB）。所以這裡直接快取「render 好的 HTML 字串」
     ——用 st.cache_data（不是 cache_resource），cache key 是排序過的區域＋景點類型
@@ -826,6 +826,8 @@ def build_browse_map_html(neighborhoods_key, spot_types_key, themes_key, wishlis
     # 參數而不是在外面先過濾好再傳 records 進來——records 是 dict 的 list、不可 hash，
     # cache_data 沒辦法當 key；而且 cache key 少了這個條件的話，開關切換前後會拿到
     # 同一份快取好的 HTML，地圖就不會跟著變。
+    # basemap_key 只用來當 cache key：換底圖網址時舊的 HTML 快取自動作廢，不用重開 App
+    # （2026-10 換掉 CARTO 底圖時，線上版就是吃到舊快取、一直顯示失效的底圖）。
     wishlist_filter = set(wishlist_key) if wishlist_key is not None else None
     records = [
         rec for rec in spot_records.values()
@@ -1177,6 +1179,7 @@ if not show_planning:
             tuple(sorted(selected_neighborhoods)), tuple(sorted(selected_spot_types)),
             tuple(sorted(selected_themes)),
             tuple(sorted(st.session_state.wishlist_ids)) if only_wishlist else None,
+            basemap_key=BASEMAP_TILES,
         )
         st.caption(
             f"目前顯示 {len(map_browse_records)} 個景點，圖釘依縮放層級自動群聚，點圖釘可以看詳情。"
